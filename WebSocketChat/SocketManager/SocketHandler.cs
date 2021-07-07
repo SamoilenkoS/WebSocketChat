@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -41,7 +39,7 @@ namespace WebSocketChat.SocketManager
 
         public async Task SendMessage(string id, string message)
         {
-            await SendMessage((Connections.GetSocketById(id)), message);
+            await SendMessage(Connections.GetSocketById(id), message);
         }
 
         public async Task SendMessageToAll(string message)

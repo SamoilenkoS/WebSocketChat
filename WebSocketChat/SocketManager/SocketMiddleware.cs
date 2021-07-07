@@ -9,22 +9,24 @@ namespace WebSocketChat.SocketManager
     public class SocketMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly SocketHandler Handler;
 
         public SocketMiddleware(RequestDelegate next, SocketHandler handler)
         {
             _next = next;
             Handler = handler;
         }
-        public SocketHandler Handler { get; set; }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.WebSockets.IsWebSocketRequest)
+            if (!context.WebSockets.IsWebSocketRequest)
             {
                 return;
             }
 
             var socket = await context.WebSockets.AcceptWebSocketAsync();
+
+            await Handler.OnConnected(socket);
 
             await Receive(socket, async (result, buffer) =>
             {
@@ -34,7 +36,7 @@ namespace WebSocketChat.SocketManager
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await Handler.OnConnected(socket);
+                    await Handler.OnDisconnected(socket);
                 }
             });
         }

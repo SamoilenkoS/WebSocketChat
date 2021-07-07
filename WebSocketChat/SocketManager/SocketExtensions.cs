@@ -27,7 +27,7 @@ namespace WebSocketChat.SocketManager
 
         public static IApplicationBuilder MapSockets(this IApplicationBuilder app, PathString path, SocketHandler socket)
         {
-            return app.Map(path, (x) => x.UseMiddleware<SocketMiddleware>());
+            return app.Map(path, (x) => x.UseMiddleware<SocketMiddleware>(socket));
         }
     }
 }

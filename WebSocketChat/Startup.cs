@@ -28,19 +28,9 @@ namespace WebSocketChat
         app.UseDeveloperExceptionPage();
       }
 
-      app.UseRouting();
-
       app.UseWebSockets();
       app.MapSockets("/ws", services.GetService<WebSocketMessageHandler>());
       app.UseStaticFiles();
-
-      app.UseEndpoints(endpoints =>
-      {
-        endpoints.MapGet("/", async context =>
-              {
-            await context.Response.WriteAsync("Hello World!");
-          });
-      });
     }
   }
 }
