@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace WebSocketChat.SocketManager
 {
-    public class SocketHandler
+    public abstract class SocketHandler
     {
         public ConnectionManager Connections { get; set; }
 
@@ -38,5 +38,20 @@ namespace WebSocketChat.SocketManager
                 new ArraySegment<byte>(Encoding.ASCII.GetBytes(message), 0, message.Length),
                 WebSocketMessageType.Text, true, CancellationToken.None);
         }
+
+        public async Task SendMessage(string id, string message)
+        {
+            await SendMessage((Connections.GetSocketById(id)), message);
+        }
+
+        public async Task SendMessageToAll(string message)
+        {
+            foreach (var connection in Connections.GetAllConnections())
+            {
+                await SendMessage(connection.Value, message);
+            }
+        }
+
+        public abstract Task Receive(WebSocket socket, ValueWebSocketReceiveResult result, byte[] buffer);
     }
 }
