@@ -52,6 +52,6 @@ namespace WebSocketChat.SocketManager
             }
         }
 
-        public abstract Task Receive(WebSocket socket, ValueWebSocketReceiveResult result, byte[] buffer);
+        public abstract Task Receive(WebSocket socket, WebSocketReceiveResult result, byte[] buffer);
     }
 }
