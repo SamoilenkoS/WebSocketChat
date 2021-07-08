@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
@@ -7,43 +8,101 @@ using System.Threading.Tasks;
 
 namespace WebSocketChat.SocketManager
 {
-    public class ConnectionManager
+    public class ConnectionManager : IEnumerable<Guid>
     {
-        private readonly ConcurrentDictionary<string, WebSocket> _connections = new ConcurrentDictionary<string, WebSocket>();
+        private readonly object _locker;
+        private readonly List<WebSocketClient> _connections;
 
-        public WebSocket GetSocketById(string id)
+        public ConnectionManager()
         {
-            return _connections.FirstOrDefault(x => x.Key == id).Value;
+            _locker = new object();
+            _connections = new List<WebSocketClient>();
         }
 
-        public ConcurrentDictionary<string, WebSocket> GetAllConnections()
+        public void AddSocket(WebSocket socket)
         {
-            return _connections;
+            lock (_locker)
+            {
+                _connections.Add(new WebSocketClient(socket));
+            }
         }
 
-        public string GetId(WebSocket socket)
+        public async Task RemoveSocketAsync(Guid id)
         {
-            return _connections.FirstOrDefault(x => x.Value == socket).Key;
-        }
-
-        public async Task RemoveSocketAsync(string id)
-        {
-            _connections.TryRemove(id, out var socket);
-            if (socket != null && (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
+            WebSocket socket;
+            lock (_locker)
+            {
+                socket = _connections.FirstOrDefault(x => x.Id == id)?.WebSocket;
+            }
+            if (socket != null &&
+                (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
             {
                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Socket connection closed",
                     CancellationToken.None);
             }
         }
 
-        public void AddSocket(WebSocket socket)
+        public WebSocket GetSocketById(Guid id)
         {
-            _connections.TryAdd(GetConnectionId(), socket);
+            lock (_locker)
+            {
+                return _connections.FirstOrDefault(x => x.Id == id)?.WebSocket;
+            }
         }
 
-        public string GetConnectionId()
+        public Guid GetId(WebSocket socket)
         {
-            return Guid.NewGuid().ToString("N");
+            lock (_locker)
+            {
+                return _connections.FirstOrDefault(x => x.WebSocket == socket)?.Id ?? Guid.Empty;
+            }
+        }
+
+        public WebSocketClient this[Guid id]
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _connections.Find(x => x.Id == id);
+                }
+            }
+        }
+
+        public WebSocketClient this[WebSocket webSocket]
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _connections.Find(x => x.WebSocket == webSocket);
+                }
+            }
+        }
+
+        public WebSocketClient this[string clientId]
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _connections.Find(x => x.Nickname == clientId) ??
+                           _connections.Find(x => x.Id.ToString("N") == clientId);
+                }
+            }
+        }
+
+        public IEnumerator<Guid> GetEnumerator()
+        {
+            foreach (var client in _connections)
+            {
+                yield return client.Id;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

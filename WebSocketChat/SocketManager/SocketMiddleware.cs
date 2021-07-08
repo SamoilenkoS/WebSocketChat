@@ -9,12 +9,12 @@ namespace WebSocketChat.SocketManager
     public class SocketMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly SocketHandler Handler;
+        private readonly SocketHandler _handler;
 
         public SocketMiddleware(RequestDelegate next, SocketHandler handler)
         {
             _next = next;
-            Handler = handler;
+            _handler = handler;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -26,17 +26,17 @@ namespace WebSocketChat.SocketManager
 
             var socket = await context.WebSockets.AcceptWebSocketAsync();
 
-            await Handler.OnConnected(socket);
+            await _handler.OnConnected(socket);
 
             await Receive(socket, async (result, buffer) =>
             {
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    await Handler.Receive(socket, result, buffer);
+                    await _handler.Receive(socket, result, buffer);
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await Handler.OnDisconnected(socket);
+                    await _handler.OnDisconnected(socket);
                 }
             });
         }
@@ -55,7 +55,7 @@ namespace WebSocketChat.SocketManager
                 {
                     if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
                     {
-                        await Handler.OnDisconnected(socket);
+                        await _handler.OnDisconnected(socket);
                     }
                 }
             }
