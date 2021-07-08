@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -9,7 +8,7 @@ namespace WebSocketChat.ConsoleClient
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             StartWebSockets().GetAwaiter().GetResult();
         }
@@ -22,7 +21,7 @@ namespace WebSocketChat.ConsoleClient
             var send = Task.Run(async () =>
             {
                 string message;
-                while ((message = Console.ReadLine()) != null && message != string.Empty)
+                while (!string.IsNullOrEmpty(message = Console.ReadLine()))
                 {
                     var bytes = Encoding.UTF8.GetBytes(message);
                     await client.SendAsync(
@@ -37,26 +36,17 @@ namespace WebSocketChat.ConsoleClient
 
             var receive = ReceiveAsync(client);
             await Task.WhenAll(send, receive);
-
-
         }
 
         public static async Task ReceiveAsync(ClientWebSocket client)
         {
             var buffer = new byte[1024 * 4];
-            while (true)
+            WebSocketReceiveResult result;
+            do
             {
-                var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 Console.WriteLine(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    await client.CloseOutputAsync(
-                        WebSocketCloseStatus.NormalClosure,
-                        string.Empty,
-                        CancellationToken.None);
-                    break;
-                }
-            }
+            } while (result.MessageType != WebSocketMessageType.Close);
         }
     }
 }

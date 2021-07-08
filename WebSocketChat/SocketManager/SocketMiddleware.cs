@@ -46,8 +46,18 @@ namespace WebSocketChat.SocketManager
             var buffer = new byte[1024 * 4];
             while (socket.State == WebSocketState.Open)
             {
-                var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                messageToHandle(result, buffer);
+                try
+                {
+                    var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    messageToHandle(result, buffer);
+                }
+                catch (WebSocketException ex)
+                {
+                    if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+                    {
+                        await Handler.OnDisconnected(socket);
+                    }
+                }
             }
         }
     }

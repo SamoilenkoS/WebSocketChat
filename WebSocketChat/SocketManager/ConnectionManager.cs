@@ -29,8 +29,11 @@ namespace WebSocketChat.SocketManager
         public async Task RemoveSocketAsync(string id)
         {
             _connections.TryRemove(id, out var socket);
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Socket connection closed",
-                CancellationToken.None);
+            if (socket != null && (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Socket connection closed",
+                    CancellationToken.None);
+            }
         }
 
         public void AddSocket(WebSocket socket)
