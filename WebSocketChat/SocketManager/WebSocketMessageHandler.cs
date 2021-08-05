@@ -42,7 +42,7 @@ namespace WebSocketChat.SocketManager
 
                 if (targetClient != null)
                 {
-                    messageText = $"{targetClient} said to you: {messageText.Substring(clientId.Length)}";
+                    messageText = $"{webSocketClient} said to you: {messageText.Substring(clientId.Length + 1)}";
                     await SendMessage(targetClient.Id, messageText);
                     return;
                 }
