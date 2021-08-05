@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
+using WebSocketChat.Commands;
 
 namespace WebSocketChat.SocketManager
 {
@@ -35,32 +36,16 @@ namespace WebSocketChat.SocketManager
         {
             var webSocketClient = ConnectionManager[socket];
             var messageText = Encoding.Unicode.GetString(buffer, 0, result.Count);
-            var message = $"{webSocketClient}: {messageText}";
-            if (messageText.StartsWith("/msg ", StringComparison.OrdinalIgnoreCase))//personal
-            {
-                messageText = messageText.Substring("/msg ".Length);
-                var clientId = messageText.Substring(0, messageText.IndexOf(' '));
-                var targetClient = ConnectionManager[clientId];
+            await ProcessMessage(webSocketClient, messageText);
+        }
 
-                if (targetClient != null)
-                {
-                    messageText = $"{webSocketClient} => {messageText.Substring(clientId.Length + 1)}";
-                    await SendMessage(targetClient.Id, messageText);
-                    return;
-                }
-            }
-            else if (messageText.StartsWith("/nickname ", StringComparison.OrdinalIgnoreCase))//nickname change
+        private async Task ProcessMessage(WebSocketClient senderSocket, string messageFromClient)
+        {
+            var command = CommandHelper.GetCommand(messageFromClient);
+            if(command != null)
             {
-                messageText = messageText.Substring("/nickname ".Length);
-                if (!messageText.Contains(" "))
-                {
-                    var oldName = webSocketClient.ToString();
-                    webSocketClient.Nickname = messageText;
-                    message = $"{oldName} nickname changed to {messageText}";
-                }
+                await command.Calculate(senderSocket, this);
             }
-
-            await SendMessageToAll(message);
         }
     }
 }
