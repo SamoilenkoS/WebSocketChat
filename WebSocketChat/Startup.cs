@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WebSocketChat.SocketManager;
 
 namespace WebSocketChat
@@ -29,7 +25,7 @@ namespace WebSocketChat
       }
 
       app.UseWebSockets();
-      app.MapSockets("/ws", services.GetService<WebSocketMessageHandler>());
+      app.Map("/ws", x => x.UseMiddleware<SocketMiddleware>(services.GetService<WebSocketMessageHandler>()));
       app.UseStaticFiles();
     }
   }

@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace WebSocketChat.SocketManager
 {
-    public static class SocketExtensions
+  public static class SocketExtensions
     {
         public static IServiceCollection AddWebSocketManager(this IServiceCollection services)
         {
@@ -23,11 +17,6 @@ namespace WebSocketChat.SocketManager
             }
 
             return services;
-        }
-
-        public static IApplicationBuilder MapSockets(this IApplicationBuilder app, PathString path, SocketHandler socket)
-        {
-            return app.Map(path, (x) => x.UseMiddleware<SocketMiddleware>(socket));
         }
     }
 }
