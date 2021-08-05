@@ -5,6 +5,8 @@ namespace WebSocketChat.SocketManager
 {
     public class WebSocketClient
     {
+        private const string IdFormat = "N";
+
         public Guid Id { get; }
 
         public string Nickname { get; set; }
@@ -19,7 +21,7 @@ namespace WebSocketChat.SocketManager
 
         public override string ToString()
         {
-            return !string.IsNullOrEmpty(Nickname) ? Nickname : Id.ToString("N");
+            return !string.IsNullOrEmpty(Nickname) ? Nickname : Id.ToString(IdFormat);
         }
     }
 }

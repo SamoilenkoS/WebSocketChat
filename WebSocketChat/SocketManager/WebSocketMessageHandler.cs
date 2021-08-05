@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 namespace WebSocketChat.SocketManager
 {
     public class WebSocketMessageHandler : SocketHandler
-
     {
+        private const string JoinMessage = "{0} just joined the party *****";
+        private const string LeaveMessage = "{0} just left the party *****";
+
         public WebSocketMessageHandler(ConnectionManager connectionManager) : base(connectionManager)
         {
         }
@@ -18,7 +20,7 @@ namespace WebSocketChat.SocketManager
 
             var socketId = ConnectionManager.GetId(socket);
 
-            await SendMessageToAll($"{socketId} just joined the party *****");
+            await SendMessageToAll(string.Format(JoinMessage, socketId));
         }
 
         public override async Task OnDisconnected(WebSocket socket)
@@ -26,14 +28,14 @@ namespace WebSocketChat.SocketManager
             var webSocketClient = ConnectionManager[socket];
 
             await base.OnDisconnected(socket);
-            await SendMessageToAll($"{webSocketClient} just left the party *****");
+            await SendMessageToAll(string.Format(LeaveMessage, webSocketClient));
         }
 
         public override async Task Receive(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
         {
             var webSocketClient = ConnectionManager[socket];
-            var messageText = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            var message = $"{webSocketClient} said: {messageText}";
+            var messageText = Encoding.Unicode.GetString(buffer, 0, result.Count);
+            var message = $"{webSocketClient}: {messageText}";
             if (messageText.StartsWith("/msg ", StringComparison.OrdinalIgnoreCase))//personal
             {
                 messageText = messageText.Substring("/msg ".Length);
@@ -42,7 +44,7 @@ namespace WebSocketChat.SocketManager
 
                 if (targetClient != null)
                 {
-                    messageText = $"{webSocketClient} said to you: {messageText.Substring(clientId.Length + 1)}";
+                    messageText = $"{webSocketClient} => {messageText.Substring(clientId.Length + 1)}";
                     await SendMessage(targetClient.Id, messageText);
                     return;
                 }

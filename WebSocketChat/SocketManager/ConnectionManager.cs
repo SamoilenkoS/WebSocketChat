@@ -10,6 +10,8 @@ namespace WebSocketChat.SocketManager
 {
     public class ConnectionManager : IEnumerable<Guid>
     {
+        private const string ConnectionClosedMessage = "Socket connection closed";
+        private const string IdFormat = "N";
         private readonly object _locker;
         private readonly List<WebSocketClient> _connections;
 
@@ -34,10 +36,11 @@ namespace WebSocketChat.SocketManager
             {
                 socket = _connections.FirstOrDefault(x => x.Id == id)?.WebSocket;
             }
+
             if (socket != null &&
                 (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
             {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Socket connection closed",
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, ConnectionClosedMessage,
                     CancellationToken.None);
             }
         }
@@ -87,7 +90,7 @@ namespace WebSocketChat.SocketManager
                 lock (_locker)
                 {
                     return _connections.Find(x => x.Nickname == clientId) ??
-                           _connections.Find(x => x.Id.ToString("N") == clientId);
+                           _connections.Find(x => x.Id.ToString(IdFormat) == clientId);
                 }
             }
         }

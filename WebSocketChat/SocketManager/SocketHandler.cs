@@ -8,7 +8,7 @@ namespace WebSocketChat.SocketManager
 {
     public abstract class SocketHandler
     {
-        public ConnectionManager ConnectionManager { get; set; }
+        public ConnectionManager ConnectionManager { get; }
 
         public SocketHandler(ConnectionManager connectionManager)
         {
@@ -16,25 +16,21 @@ namespace WebSocketChat.SocketManager
         }
 
         public virtual async Task OnConnected(WebSocket socket)
-        {
-            await Task.Run(() => { ConnectionManager.AddSocket(socket); });
-        }
+            => await Task.Run(()
+                => ConnectionManager.AddSocket(socket));
 
         public virtual async Task OnDisconnected(WebSocket socket)
-        {
-            await ConnectionManager.RemoveSocketAsync(ConnectionManager.GetId(socket));
-        }
+            => await ConnectionManager.RemoveSocketAsync(ConnectionManager.GetId(socket));
 
         public async Task SendMessage(WebSocket socket, string message)
         {
-            if (socket.State != WebSocketState.Open)
+            if (socket.State == WebSocketState.Open)
             {
-                return;
+                var encodedBytes = Encoding.Unicode.GetBytes(message);
+                await socket.SendAsync(
+                    new ArraySegment<byte>(encodedBytes, 0, encodedBytes.Length),
+                    WebSocketMessageType.Text, true, CancellationToken.None);
             }
-
-            await socket.SendAsync(
-                new ArraySegment<byte>(Encoding.ASCII.GetBytes(message), 0, message.Length),
-                WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
         public async Task SendMessage(Guid id, string message)

@@ -23,7 +23,7 @@ namespace WebSocketChat.ConsoleClient
                 string message;
                 while (!string.IsNullOrEmpty(message = Console.ReadLine()))
                 {
-                    var bytes = Encoding.UTF8.GetBytes(message);
+                    var bytes = Encoding.Unicode.GetBytes(message);
                     await client.SendAsync(
                         new ArraySegment<byte>(bytes),
                         WebSocketMessageType.Text,
@@ -45,7 +45,7 @@ namespace WebSocketChat.ConsoleClient
             do
             {
                 result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                Console.WriteLine(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                Console.WriteLine(Encoding.Unicode.GetString(buffer, 0, result.Count));
             } while (result.MessageType != WebSocketMessageType.Close);
         }
     }

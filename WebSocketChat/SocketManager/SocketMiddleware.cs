@@ -8,40 +8,26 @@ namespace WebSocketChat.SocketManager
 {
     public class SocketMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly SocketHandler _handler;
+        private readonly SocketHandler _socketHandler;
 
-        public SocketMiddleware(RequestDelegate next, SocketHandler handler)
+        public SocketMiddleware(RequestDelegate _, SocketHandler handler)
         {
-            _next = next;
-            _handler = handler;
+            _socketHandler = handler;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!context.WebSockets.IsWebSocketRequest)
+            if (context.WebSockets.IsWebSocketRequest)
             {
-                return;
+                var socket = await context.WebSockets.AcceptWebSocketAsync();
+
+                await _socketHandler.OnConnected(socket);
+
+                await Receive(socket);
             }
-
-            var socket = await context.WebSockets.AcceptWebSocketAsync();
-
-            await _handler.OnConnected(socket);
-
-            await Receive(socket, async (result, buffer) =>
-            {
-                if (result.MessageType == WebSocketMessageType.Text)
-                {
-                    await _handler.Receive(socket, result, buffer);
-                }
-                else if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    await _handler.OnDisconnected(socket);
-                }
-            });
         }
 
-        private async Task Receive(WebSocket socket, Action<WebSocketReceiveResult, byte[]> messageToHandle)
+        private async Task Receive(WebSocket socket)
         {
             var buffer = new byte[1024 * 4];
             while (socket.State == WebSocketState.Open)
@@ -49,15 +35,27 @@ namespace WebSocketChat.SocketManager
                 try
                 {
                     var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    messageToHandle(result, buffer);
+                    await ProcessMessageBySocket(socket, result, buffer);
                 }
                 catch (WebSocketException ex)
                 {
                     if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
                     {
-                        await _handler.OnDisconnected(socket);
+                        await _socketHandler.OnDisconnected(socket);
                     }
                 }
+            }
+        }
+
+        private async Task ProcessMessageBySocket(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
+        {
+            if (result.MessageType == WebSocketMessageType.Text)
+            {
+                await _socketHandler.Receive(socket, result, buffer);
+            }
+            else if (result.MessageType == WebSocketMessageType.Close)
+            {
+                await _socketHandler.OnDisconnected(socket);
             }
         }
     }
