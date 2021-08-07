@@ -7,30 +7,35 @@ namespace WebSocketChat.Core.Commands
         public static Command GetCommand(string message)
         {
             Command result;
-            bool isCommand = message.StartsWith(Consts.Commands.CommandSign);
-            if (isCommand)
+            if (!string.IsNullOrWhiteSpace(message))
             {
-                message = message.Substring(1);
-                var spaceIndex = message.IndexOf(' ');
-                if (spaceIndex != -1)
+                bool isCommand = message.StartsWith(Consts.Commands.CommandSign);
+                if (isCommand)
                 {
-                    var commandDescription = message.Substring(spaceIndex).TrimStart();
-                    result = message switch
+                    message = message.Substring(1);
+                    var commandArgs = message.Split(' ');
+                    var commandName = commandArgs[0];
+                    commandArgs = commandArgs[1..];
+
+                    result = commandName switch
                     {
-                        string str when str.StartsWith(Consts.Commands.PrivateMessageCommand) => new PrivateMessageCommand(commandDescription),
-                        string str when str.StartsWith(Consts.Commands.NicknameChangeCommand) => new NicknameChangeCommand(commandDescription),
-                        string str when str.StartsWith(Consts.Commands.ColorChangeCommand) => new ColorChangeCommand(commandDescription),
-                        _ => new InvalidCommand(string.Empty),
+                        string str when str.StartsWith(Consts.Commands.PrivateMessageCommand)
+                            => PrivateMessageCommand.Create(commandArgs),
+                        string str when str.StartsWith(Consts.Commands.NicknameChangeCommand)
+                            => NicknameChangeCommand.Create(commandArgs),
+                        string str when str.StartsWith(Consts.Commands.ColorChangeCommand)
+                            => ColorChangeCommand.Create(commandArgs),
+                        _ => InvalidCommand.Create()
                     };
                 }
                 else
                 {
-                    result = new InvalidCommand(string.Empty);
+                    result = MessageToAllCommand.Create(new[] { message });
                 }
             }
             else
             {
-                result = new MessageToAllCommand(message);
+                result = InvalidCommand.Create();
             }
 
             return result;

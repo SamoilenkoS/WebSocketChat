@@ -1,37 +1,47 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using WebSocketChat.Core.SocketManager;
 
 namespace WebSocketChat.Core.Commands
 {
     public class PrivateMessageCommand : Command
     {
-        public PrivateMessageCommand(string message) : base(message)
+        private const int MinArgsCount = 2;
+
+        private PrivateMessageCommand(string[] args) : base(args)
         {
+        }
+
+        public static PrivateMessageCommand Create(string[] args)
+        {
+            if(args.Length >= MinArgsCount)
+            {
+                return new PrivateMessageCommand(args);
+            }
+
+            throw new ArgumentException("Message");//TODO remove it!
         }
 
         public override async Task ProcessMessage(WebSocketClient sender, SocketHandler socketHandler)
         {
-            var spaceIndex = Message.IndexOf(' ');
-            if(spaceIndex != -1)
+            var clientId = Args[0];
+            var targetClient = socketHandler.ConnectionManager[clientId];
+
+            if (targetClient != null)
             {
-                var clientId = Message.Substring(0, spaceIndex);
-                var targetClient = socketHandler.ConnectionManager[clientId];
+                var message = string.Format(
+                    Consts.PrivateMessageFormat,
+                    sender,
+                    string.Join(' ', Args[1..]));
 
-                if (targetClient != null)
+                await socketHandler.SendMessage(targetClient.WebSocket, new MessageContract
                 {
-                    Message = string.Format(
-                        Consts.PrivateMessageFormat,
-                        sender,
-                        Message.Substring(clientId.Length + 1));
-
-                    await socketHandler.SendMessage(targetClient.WebSocket, new MessageContract
-                    {
-                        Message = Message,
-                        ReceivedMessageColor = sender.MessagesColor,
-                        ClientMessageColor = targetClient.MessagesColor
-                    });
-                }
+                    Message = message,
+                    ReceivedMessageColor = sender.MessagesColor,
+                    ClientMessageColor = targetClient.MessagesColor
+                });
             }
+
         }
     }
 }

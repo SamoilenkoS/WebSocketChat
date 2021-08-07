@@ -5,8 +5,13 @@ namespace WebSocketChat.Core.Commands
 {
     public class InvalidCommand : Command
     {
-        public InvalidCommand(string message) : base(message)
+        private InvalidCommand(string[] args) : base(args)
         {
+        }
+
+        public static InvalidCommand Create()
+        {
+            return new InvalidCommand(null);
         }
 
         public override async Task ProcessMessage(WebSocketClient sender, SocketHandler socketHandler)

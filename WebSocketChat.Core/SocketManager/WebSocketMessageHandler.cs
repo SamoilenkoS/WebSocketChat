@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 using WebSocketChat.Core.Commands;
@@ -50,10 +51,14 @@ namespace WebSocketChat.Core
 
         private async Task ProcessMessage(WebSocketClient senderSocket, string messageFromClient)
         {
-            var command = CommandHelper.GetCommand(messageFromClient);
-            if(command != null)
+            try
             {
-                await command.ProcessMessage(senderSocket, this);
+                var command = CommandHelper.GetCommand(messageFromClient);//TODO add summary becuause it could throw some Ex
+                await command?.ProcessMessage(senderSocket, this);
+            }
+            catch(Exception ex)
+            {
+                //TODO add logging
             }
         }
     }

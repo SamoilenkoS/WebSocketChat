@@ -4,11 +4,11 @@ namespace WebSocketChat.Core.SocketManager
 {
     public abstract class Command
     {
-        public string Message { get; protected set; }
+        public string[] Args { get; protected set; }
 
-        public Command(string message)
+        protected Command(string[] args)
         {
-            Message = message;
+            Args = args;
         }
 
         public abstract Task ProcessMessage(WebSocketClient sender, SocketHandler socketHandler);

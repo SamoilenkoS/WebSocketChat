@@ -6,13 +6,25 @@ namespace WebSocketChat.Core.Commands
 {
     public class ColorChangeCommand : Command
     {
-        public ColorChangeCommand(string message) : base(message)
+        private const int ArgsCount = 1;
+
+        private ColorChangeCommand(string[] args) : base(args)
         {
+        }
+
+        public static ColorChangeCommand Create(string[] args)
+        {
+            if (args.Length == ArgsCount)
+            {
+                return new ColorChangeCommand(args);
+            }
+
+            throw new ArgumentException("Message");//TODO remove it!
         }
 
         public override async Task ProcessMessage(WebSocketClient sender, SocketHandler socketHandler)
         {
-            if (Enum.TryParse<ConsoleColor>(Message, out var newColor))
+            if (Enum.TryParse<ConsoleColor>(Args[0], out var newColor))
             {
                 sender.MessagesColor = newColor;
                 await socketHandler.SendMessage(sender.WebSocket, new MessageContract
