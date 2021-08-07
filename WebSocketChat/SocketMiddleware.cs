@@ -3,6 +3,8 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using WebSocketChat.Core;
+using WebSocketChat.Core.SocketManager;
 
 namespace WebSocketChat.SocketManager
 {
@@ -29,7 +31,7 @@ namespace WebSocketChat.SocketManager
 
         private async Task Receive(WebSocket socket)
         {
-            var buffer = new byte[1024 * 4];
+            var buffer = new byte[Consts.MessageSizeInBytes];
             while (socket.State == WebSocketState.Open)
             {
                 try

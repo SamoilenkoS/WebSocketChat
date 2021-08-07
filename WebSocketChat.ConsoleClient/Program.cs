@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using WebSocketChat.Core;
 
 namespace WebSocketChat.ConsoleClient
 {
@@ -40,13 +42,25 @@ namespace WebSocketChat.ConsoleClient
 
         public static async Task ReceiveAsync(ClientWebSocket client)
         {
-            var buffer = new byte[1024 * 4];
+            var buffer = new byte[Consts.MessageSizeInBytes];
             WebSocketReceiveResult result;
             do
             {
                 result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                Console.WriteLine(Encoding.Unicode.GetString(buffer, 0, result.Count));
+
+                var json = Encoding.Unicode.GetString(buffer, 0, result.Count);
+                var messageContract = JsonSerializer.Deserialize<MessageContract>(json);
+
+                ProcessMessage(messageContract);
             } while (result.MessageType != WebSocketMessageType.Close);
         }
+
+        private static void ProcessMessage(MessageContract messageContract)
+        {
+            Console.ForegroundColor = messageContract.ReceivedMessageColor;
+            Console.WriteLine(messageContract.Message);
+            Console.ForegroundColor = messageContract.ClientMessageColor;
+        }
+
     }
 }

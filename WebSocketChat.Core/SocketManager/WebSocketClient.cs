@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Net.WebSockets;
 
-namespace WebSocketChat.SocketManager
+namespace WebSocketChat.Core.SocketManager
 {
     public class WebSocketClient
     {
-        private const string IdFormat = "N";
-
         public Guid Id { get; }
 
         public string Nickname { get; set; }
+
+        public ConsoleColor MessagesColor { get; set; }
 
         public WebSocket WebSocket { get; }
 
@@ -17,11 +17,12 @@ namespace WebSocketChat.SocketManager
         {
             Id = Guid.NewGuid();
             WebSocket = webSocket;
+            MessagesColor = ConsoleColor.Gray;
         }
 
         public override string ToString()
         {
-            return !string.IsNullOrEmpty(Nickname) ? Nickname : Id.ToString(IdFormat);
+            return !string.IsNullOrEmpty(Nickname) ? Nickname : Id.ToString(Consts.IdFormat);
         }
     }
 }

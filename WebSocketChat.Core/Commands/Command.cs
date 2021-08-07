@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
-using WebSocketChat.SocketManager;
 
-namespace WebSocketChat.Commands
+namespace WebSocketChat.Core.SocketManager
 {
     public abstract class Command
     {
@@ -12,6 +11,6 @@ namespace WebSocketChat.Commands
             Message = message;
         }
 
-        public abstract Task Calculate(WebSocketClient sender, SocketHandler socketHandler);
+        public abstract Task ProcessMessage(WebSocketClient sender, SocketHandler socketHandler);
     }
 }

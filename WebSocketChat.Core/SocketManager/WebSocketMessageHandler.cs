@@ -1,16 +1,13 @@
-﻿using System;
-using System.Net.WebSockets;
+﻿using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
-using WebSocketChat.Commands;
+using WebSocketChat.Core.Commands;
+using WebSocketChat.Core.SocketManager;
 
-namespace WebSocketChat.SocketManager
+namespace WebSocketChat.Core
 {
     public class WebSocketMessageHandler : SocketHandler
     {
-        private const string JoinMessage = "{0} just joined the party *****";
-        private const string LeaveMessage = "{0} just left the party *****";
-
         public WebSocketMessageHandler(ConnectionManager connectionManager) : base(connectionManager)
         {
         }
@@ -19,9 +16,15 @@ namespace WebSocketChat.SocketManager
         {
             await base.OnConnected(socket);
 
-            var socketId = ConnectionManager.GetId(socket);
+            var webSocketClient = ConnectionManager[socket];
 
-            await SendMessageToAll(string.Format(JoinMessage, socketId));
+            await SendMessageToAll(
+                new MessageContract
+                {
+                    Message = string.Format(Consts.Messages.JoinMessage, webSocketClient.Id),
+                    ReceivedMessageColor = webSocketClient.MessagesColor,
+                    ClientMessageColor = webSocketClient.MessagesColor
+                }, webSocketClient.Id);
         }
 
         public override async Task OnDisconnected(WebSocket socket)
@@ -29,7 +32,13 @@ namespace WebSocketChat.SocketManager
             var webSocketClient = ConnectionManager[socket];
 
             await base.OnDisconnected(socket);
-            await SendMessageToAll(string.Format(LeaveMessage, webSocketClient));
+            await SendMessageToAll(
+                new MessageContract
+                {
+                    Message = string.Format(Consts.Messages.LeaveMessage, webSocketClient),
+                    ReceivedMessageColor = webSocketClient.MessagesColor,
+                    ClientMessageColor = webSocketClient.MessagesColor
+                }, webSocketClient.Id);
         }
 
         public override async Task Receive(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
@@ -44,7 +53,7 @@ namespace WebSocketChat.SocketManager
             var command = CommandHelper.GetCommand(messageFromClient);
             if(command != null)
             {
-                await command.Calculate(senderSocket, this);
+                await command.ProcessMessage(senderSocket, this);
             }
         }
     }

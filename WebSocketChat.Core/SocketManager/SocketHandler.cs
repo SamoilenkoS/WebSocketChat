@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WebSocketChat.SocketManager
+namespace WebSocketChat.Core.SocketManager
 {
     public abstract class SocketHandler
     {
@@ -22,10 +23,11 @@ namespace WebSocketChat.SocketManager
         public virtual async Task OnDisconnected(WebSocket socket)
             => await ConnectionManager.RemoveSocketAsync(ConnectionManager.GetId(socket));
 
-        public async Task SendMessage(WebSocket socket, string message)
+        public async Task SendMessage(WebSocket socket, MessageContract messageContract)
         {
             if (socket.State == WebSocketState.Open)
             {
+                var message = JsonSerializer.Serialize(messageContract);
                 var encodedBytes = Encoding.Unicode.GetBytes(message);
                 await socket.SendAsync(
                     new ArraySegment<byte>(encodedBytes, 0, encodedBytes.Length),
@@ -33,16 +35,15 @@ namespace WebSocketChat.SocketManager
             }
         }
 
-        public async Task SendMessage(Guid id, string message)
+        public async Task SendMessageToAll(MessageContract messageContract, Guid senderId)
         {
-            await SendMessage(ConnectionManager.GetSocketById(id), message);
-        }
-
-        public async Task SendMessageToAll(string message)
-        {
-            foreach (var connectionId in ConnectionManager)
+            foreach (var webSocketClient in ConnectionManager)
             {
-                await SendMessage(connectionId, message);
+                if(webSocketClient.Id != senderId)
+                {
+                    messageContract.ClientMessageColor = webSocketClient.MessagesColor;
+                    await SendMessage(webSocketClient.WebSocket, messageContract);
+                }
             }
         }
 

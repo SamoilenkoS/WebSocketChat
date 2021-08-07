@@ -5,13 +5,12 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using WebSocketChat.Core.SocketManager;
 
-namespace WebSocketChat.SocketManager
+namespace WebSocketChat.Core
 {
-    public class ConnectionManager : IEnumerable<Guid>
+    public class ConnectionManager : IEnumerable<WebSocketClient>
     {
-        private const string ConnectionClosedMessage = "Socket connection closed";
-        private const string IdFormat = "N";
         private readonly object _locker;
         private readonly List<WebSocketClient> _connections;
 
@@ -40,16 +39,8 @@ namespace WebSocketChat.SocketManager
             if (socket != null &&
                 (socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
             {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, ConnectionClosedMessage,
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, Consts.Messages.ConnectionClosedMessage,
                     CancellationToken.None);
-            }
-        }
-
-        public WebSocket GetSocketById(Guid id)
-        {
-            lock (_locker)
-            {
-                return _connections.FirstOrDefault(x => x.Id == id)?.WebSocket;
             }
         }
 
@@ -58,17 +49,6 @@ namespace WebSocketChat.SocketManager
             lock (_locker)
             {
                 return _connections.FirstOrDefault(x => x.WebSocket == socket)?.Id ?? Guid.Empty;
-            }
-        }
-
-        public WebSocketClient this[Guid id]
-        {
-            get
-            {
-                lock (_locker)
-                {
-                    return _connections.Find(x => x.Id == id);
-                }
             }
         }
 
@@ -90,17 +70,14 @@ namespace WebSocketChat.SocketManager
                 lock (_locker)
                 {
                     return _connections.Find(x => x.Nickname == clientId) ??
-                           _connections.Find(x => x.Id.ToString(IdFormat) == clientId);
+                           _connections.Find(x => x.Id.ToString(Consts.IdFormat) == clientId);
                 }
             }
         }
 
-        public IEnumerator<Guid> GetEnumerator()
+        public IEnumerator<WebSocketClient> GetEnumerator()
         {
-            foreach (var client in _connections)
-            {
-                yield return client.Id;
-            }
+            return _connections.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
