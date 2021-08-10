@@ -11,7 +11,7 @@ namespace WebSocketChat.Core.Commands
             if (!string.IsNullOrWhiteSpace(message))
             {
                 bool isCommand = message.StartsWith(Consts.Commands.CommandSign);
-                if (isCommand)
+                if (isCommand && message.Length > 1)
                 {
                     message = message.Substring(1);
                     var commandArgs = message.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -29,9 +29,13 @@ namespace WebSocketChat.Core.Commands
                         _ => InvalidCommand.Create()
                     };
                 }
-                else
+                else if(!isCommand)
                 {
                     result = MessageToAllCommand.Create(new[] { message });
+                }
+                else
+                {
+                    result = InvalidCommand.Create();
                 }
             }
             else

@@ -18,7 +18,7 @@ namespace WebSocketChat.ConsoleClient
         public static async Task StartWebSockets()
         {
             var client = new ClientWebSocket();
-            await client.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None);
+            await client.ConnectAsync(new Uri("wss://websocketchatforitea.azurewebsites.net/ws"), CancellationToken.None);
             Console.WriteLine($"Web socket connection established @ {DateTime.UtcNow:F}");
             var send = Task.Run(async () =>
             {
