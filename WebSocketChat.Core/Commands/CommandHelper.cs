@@ -1,4 +1,5 @@
-﻿using WebSocketChat.Core.SocketManager;
+﻿using System;
+using WebSocketChat.Core.SocketManager;
 
 namespace WebSocketChat.Core.Commands
 {
@@ -13,7 +14,7 @@ namespace WebSocketChat.Core.Commands
                 if (isCommand)
                 {
                     message = message.Substring(1);
-                    var commandArgs = message.Split(' ');
+                    var commandArgs = message.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     var commandName = commandArgs[0];
                     commandArgs = commandArgs[1..];
 

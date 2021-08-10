@@ -25,6 +25,7 @@ namespace WebSocketChat
             }
 
             app.UseWebSockets();
+
             app.Map("/ws", x => x.UseMiddleware<SocketMiddleware>(services.GetService<SocketHandler>()));
             app.UseStaticFiles();
         }

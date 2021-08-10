@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using WebSocketChat.Core;
 using WebSocketChat.Core.SocketManager;
 
@@ -11,10 +12,12 @@ namespace WebSocketChat.SocketManager
     public class SocketMiddleware
     {
         private readonly SocketHandler _socketHandler;
+        private readonly ILogger<SocketMiddleware> _logger;
 
-        public SocketMiddleware(RequestDelegate _, SocketHandler handler)
+        public SocketMiddleware(RequestDelegate _, SocketHandler handler, ILogger<SocketMiddleware> logger)
         {
             _socketHandler = handler;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -45,6 +48,10 @@ namespace WebSocketChat.SocketManager
                     {
                         await _socketHandler.OnDisconnected(socket);
                     }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message);
                 }
             }
         }

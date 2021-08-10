@@ -51,15 +51,9 @@ namespace WebSocketChat.Core
 
         private async Task ProcessMessage(WebSocketClient senderSocket, string messageFromClient)
         {
-            try
-            {
-                var command = CommandHelper.GetCommand(messageFromClient);//TODO add summary becuause it could throw some Ex
-                await command?.ProcessMessage(senderSocket, this);
-            }
-            catch(Exception ex)
-            {
-                //TODO add logging
-            }
+            var command = CommandHelper.GetCommand(messageFromClient);
+
+            await command?.ProcessMessage(senderSocket, this);
         }
     }
 }

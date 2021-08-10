@@ -19,7 +19,8 @@ namespace WebSocketChat.Core.Commands
                 return new PrivateMessageCommand(args);
             }
 
-            throw new ArgumentException("Message");//TODO remove it!
+            throw new ArgumentException(
+                string.Format(Consts.Messages.InvalidCommandArgumentsMessage, nameof(PrivateMessageCommand), MinArgsCount));
         }
 
         public override async Task ProcessMessage(WebSocketClient sender, SocketHandler socketHandler)
